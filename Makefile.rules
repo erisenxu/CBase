@@ -1,0 +1,45 @@
+########################################################################
+#                                                                      #
+#      Makefile template file (you may change this title)              #
+#      COMPONENT:   Makefile for Message(RULES)                        #
+#      DATE:        2011/01/04                                         #
+#      CREATOR:     Erisen Xu                                          #
+#                                                                      #
+########################################################################
+
+# build flag for so file
+ifdef SO
+	export SO
+endif
+
+# build flag for product ouput directory
+ifdef PRODUCT
+	export PRODUCT
+endif
+
+# Definition for build directory
+OBJ_DIR  = objs
+INC_DIR  = ./
+SRC_DIR  = ./
+INSTALL_DIR = ../deploy
+
+TARGET = Base
+LIB_TARGET = lib$(TARGET).a
+
+# Definitions for build command
+CPP = gcc -c -D_GNU_SOURCE -fPIC -g
+LINK = gcc -Wall -fPIC -g
+LIB = ar rcs
+
+CXXINCS = -I"$(INC_DIR)"
+
+CXXFLAGS = $(CXXINCS)
+
+ALL = MK_DIR $(TARGET) $(LIB_TARGET)
+
+all: $(ALL)
+
+MK_DIR:
+	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(INSTALL_DIR)
+	@mkdir -p $(INSTALL_DIR)/lib
