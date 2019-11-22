@@ -1,2 +1,4 @@
 
 *.bak
+*.o
+.DS_Store
