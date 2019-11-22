@@ -21,7 +21,8 @@ endif
 OBJ_DIR  = objs
 INC_DIR  = ./
 SRC_DIR  = ./
-INSTALL_DIR = ../deploy
+DEP_DIR  = ./dep
+INSTALL_DIR = ./deploy
 
 TARGET = Base
 LIB_TARGET = lib$(TARGET).a
@@ -31,11 +32,17 @@ CPP = gcc -c -D_GNU_SOURCE -fPIC -g
 LINK = gcc -Wall -fPIC -g
 LIB = ar rcs
 
-CXXINCS = -I"$(INC_DIR)"
+CXXINCS = -I"$(INC_DIR)" \
+		  -I"$(DEP_DIR)/openssl-1.0.0a/include"
 
 CXXFLAGS = $(CXXINCS)
 
-ALL = MK_DIR $(TARGET) $(LIB_TARGET)
+CXXLIBS = -L"$(DEP_DIR)/openssl-1.0.0a/lib/" \
+		  -ldl \
+		  -lssl \
+		  -lcrypto
+
+ALL = MK_DIR $(LIB_TARGET) ${TARGET}
 
 all: $(ALL)
 

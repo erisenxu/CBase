@@ -21,7 +21,7 @@
  */
 static void init_shm_module_num(LPSHMMODULEMGR pstModuleMgr)
 {
-    int i = 0;
+    U16 i = 0;
 
     if (NULL == pstModuleMgr) return;
 
@@ -88,7 +88,7 @@ static char* shm_errno(int iErr)
 /**
  * 获取共享内存
  * @param iKey 共享内存key
- * @param iSize 共享内存大小
+ * @param llSize 共享内存大小
  * @param iFlag 创建共享内存flag
  * @return 成功返回获取的共享内存地址，失败返回NULL
  */
@@ -96,6 +96,8 @@ static void* get_shm(int iKey,  size_t llSize, int iFlag)
 {
     int iShm;
     void *pvShm;
+
+    LOG_DEBUG("%s enter, iKey:%d, size:%llu, flag:%d", __FUNCTION__, iKey, (U64)llSize, iFlag);
 
     /* 连接或创建共享内存 */
     iShm = shmget(iKey, llSize, iFlag);
@@ -118,7 +120,7 @@ static void* get_shm(int iKey,  size_t llSize, int iFlag)
 /**
  * 根据路径名获取共享内存地址，如果内存已存在，则返回已存在的内存地址；如果不存在且Flag设置了IPC_CREAT标志，则试图创建共享内存
  * @param szPath 路径名
- * @param size 共享内存大小
+ * @param llSize 共享内存大小
  * @param iFlag Flag
  * @param pchFresh 若共享内存是新建的，返回1，已经存在的内存返回0
  * @return 成功返回获得的内存地址，失败返回NULL
@@ -171,7 +173,7 @@ static size_t get_shm_module_size(LPSHMMODULEINFO pstModule)
 
     llSize = (NULL == pstModule->getModuleShmSize) ? pstModule->llSize : pstModule->getModuleShmSize();
 
-    return llSize < 0 ? 0 : llSize;
+    return llSize <= 0 ? 0 : llSize;
 }
 
 //共享内存的结构划分: 上次是否成功标记 + 总大小 + {模块名 + 实际数据} * Entries的数量

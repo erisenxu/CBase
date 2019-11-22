@@ -559,6 +559,8 @@ void* shm_table_next(LPSHMTABLE pstShmTable)
         SHM_TABLE_INVALID_INDEX == pstShmTable->stInterator.pstShmNode->iData ||    /* 可能在迭代的过程中，数据被删除了 */
         SHM_TABLE_INVALID_INDEX == pstShmTable->stInterator.pstShmNode->iNext)      /* 可能在迭代的过程中，数据被删除了 */
     {
+        U32 dwMaxScan = 0;
+
         /* 当节点被删除时，从下个节点开始遍历 */
         if (pstShmTable->stInterator.pstShmNode != NULL)
         {
@@ -566,9 +568,13 @@ void* shm_table_next(LPSHMTABLE pstShmTable)
             pstShmTable->stInterator.pstShmNode = NULL;
         }
 
-        for (i = pstShmTable->stInterator.dwPos; i < pstShmTable->dwMaxDataNum; i++)
+        dwMaxScan = pstShmTable->dwMaxDataNum + pstShmTable->stInterator.dwPos;
+
+        for (i = pstShmTable->stInterator.dwPos; i < dwMaxScan; i++)
         {
-            pstShmNode = (LPSHMTABLENODE)(pstShmTable->pstTableData->szData + i * sizeof(*pstShmNode));
+            U32 j = i % pstShmTable->dwMaxDataNum;
+
+            pstShmNode = (LPSHMTABLENODE)(pstShmTable->pstTableData->szData + j * sizeof(*pstShmNode));
 
             /* 当找到有效数据 */
             if (pstShmNode->iData != SHM_TABLE_INVALID_INDEX)
@@ -586,12 +592,12 @@ void* shm_table_next(LPSHMTABLE pstShmTable)
                 /* 更新迭代器 */
                 if (pstShmNode->iNext != SHM_TABLE_INVALID_INDEX)
                 {
-                    pstShmTable->stInterator.dwPos = i;
+                    pstShmTable->stInterator.dwPos = j;
                     pstShmTable->stInterator.pstShmNode = pstShmNode;
                 }
                 else
                 {
-                    pstShmTable->stInterator.dwPos = i + 1;
+                    pstShmTable->stInterator.dwPos = j + 1;
                 }
 
                 return szData;

@@ -22,8 +22,8 @@ struct tagFixMemPool
     //char* pszMemHead;
 };
 
-typedef struct tagFixMemPool    FIXMEMPOLL;
-typedef struct tagFixMemPool*   LPFIXMEMPOLL;
+typedef struct tagFixMemPool    FIXMEMPOOL;
+typedef struct tagFixMemPool*   LPFIXMEMPOOL;
 
 #ifdef __cplusplus
 extern "C"
@@ -38,7 +38,7 @@ extern "C"
  * @param dwBlockSize 每块内存的大小
  * @return 成功返回0，失败返回错误码
  */
-int init_fix_mem_pool(LPFIXMEMPOLL pstFixMemPool, char* pszMem, U32 dwMemLen, U32 dwBlockSize);
+int init_fix_mem_pool(LPFIXMEMPOOL pstFixMemPool, char* pszMem, U32 dwMemLen, U32 dwBlockSize);
 
 /**
  * 内存池attach到共享内存，但不修改内存池中的初始值
@@ -48,7 +48,7 @@ int init_fix_mem_pool(LPFIXMEMPOLL pstFixMemPool, char* pszMem, U32 dwMemLen, U3
  * @param dwBlockSize 每块内存的大小
  * @return 成功返回0，失败返回错误码
  */
-int attach_fix_mem_pool(LPFIXMEMPOLL pstFixMemPool, char* pszMem, U32 dwMemLen, U32 dwBlockSize);
+int attach_fix_mem_pool(LPFIXMEMPOOL pstFixMemPool, char* pszMem, U32 dwMemLen, U32 dwBlockSize);
 
 /**
  * 从共享内存池中分配内存
@@ -56,7 +56,7 @@ int attach_fix_mem_pool(LPFIXMEMPOLL pstFixMemPool, char* pszMem, U32 dwMemLen, 
  * @param piIndex 成功时，返回分配的内存块的索引
  * @return 成功返回分配的内存，如果内存不足返回NULL
  */
-char* fix_mem_pool_malloc(LPFIXMEMPOLL pstFixMemPool, int* piIndex);
+char* fix_mem_pool_malloc(LPFIXMEMPOOL pstFixMemPool, int* piIndex);
 
 /**
  * 释放从共享内存池中分配的内存
@@ -64,7 +64,7 @@ char* fix_mem_pool_malloc(LPFIXMEMPOLL pstFixMemPool, int* piIndex);
  * @param iBlockIndex 要释放的内存块索引
  * @return 成功返回0，失败返回错误码
  */
-int fix_mem_pool_free(LPFIXMEMPOLL pstFixMemPool, int iBlockIndex);
+int fix_mem_pool_free(LPFIXMEMPOOL pstFixMemPool, int iBlockIndex);
 
 /**
  * 获取内存池指定索引处的内存
@@ -73,7 +73,7 @@ int fix_mem_pool_free(LPFIXMEMPOLL pstFixMemPool, int iBlockIndex);
  * @param piFree 若内存被占用，返回0，未被占用返回1。若函数调用失败，piFree无意义
  * @return 成功返回索引处的内存，失败NULL
  */
-char* fix_mem_pool_at(LPFIXMEMPOLL pstFixMemPool, int iBlockIndex, int* piFree);
+char* fix_mem_pool_at(LPFIXMEMPOOL pstFixMemPool, int iBlockIndex, int* piFree);
 
 #ifdef __cplusplus
 }

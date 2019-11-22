@@ -3,8 +3,16 @@
 #include "mem/FixMemPool.h"
 #include <sys/ipc.h>
 #include "test/ShmTableTest.h"
+#include "test/MD5Test.h"
+#include <string.h>
+#include <stdlib.h>
+#include <crypt/Base64.h>
+#include "test/TeaTest.h"
+#include "test/JsonTest.h"
+#include "test/UriTest.h"
+#include "test/CommandTest.h"
 
-void printFixMemPoolInfo(LPFIXMEMPOLL pstFixMemPool)
+void printFixMemPoolInfo(LPFIXMEMPOOL pstFixMemPool)
 {
     int i;
     int iFree;
@@ -53,7 +61,7 @@ void printMemChar(char* aszMem[], int iNum)
 void testFixMemPool()
 {
     char szMemData[1024];
-    FIXMEMPOLL stFixMemPool;
+    FIXMEMPOOL stFixMemPool;
     int iRet;
     int aiIndex[5];
     char* aszMem[5];
@@ -157,6 +165,83 @@ int main(int argc, const char* argv[])
             int iID = argc > 3 ? atoi(argv[3]) : 1;
             test_shm_table(iType, iID);
         }
+        break;
+    case '5':
+        {
+            if (argc > 2)
+            {
+                test_md5(argv[2], strlen(argv[2]));
+            }
+            else
+            {
+                char xx[10];
+                int i;
+                for (i = 0; i < 10; i++)
+                {
+                    xx[i] = i;
+                }
+                test_md5(xx, 10);
+            }
+            break;
+        }
+    case '6':
+        {
+            if (argc > 2)
+            {
+                char output[1024];
+                char buf[1024];
+                int len = base64_encode(output, argv[2], strlen(argv[2]));
+                printf("%d\n%s\n", len, output);
+
+                len = base64_decode(buf, output, len);
+                printf("%d\n%s\n", len, buf);
+            }
+            else
+            {
+                char xx[10];
+                int i;
+                for (i = 0; i < 10; i++)
+                {
+                    xx[i] = i;
+                }
+
+                char output[1024];
+                char buf[1024];
+                int len = base64_encode(output, xx, 10);
+                printf("%d\n%s\n", len, output);
+
+                len = base64_decode(buf, output, len);
+                printf("%d\n", len);
+
+                for (i = 0; i < len; i++)
+                {
+                    printf("%d ", buf[i]);
+                }
+                printf("\n");
+            }
+            break;
+        }
+    case '7':
+        test_tea();
+        break;
+    case '8':
+        if (argc <= 2)
+        {
+            printf("not enough parameter!need json file!\n");
+            return -1;
+        }
+        test_json(argv[2]);
+        break;
+    case '9':
+        test_uri();
+        break;
+    case 'a':
+        if (argc <= 2)
+        {
+            printf("not enough parameter!need command file!\n");
+            return -1;
+        }
+        test_command_parse(argv[2]);
         break;
     }
 

@@ -250,7 +250,7 @@ static int msgq_do_recv(LPMSGQUEUECHANNELDATA pstChannelData, U32 dwSrcAddr,
 int msgq_recv(LPMSGQUEUECHANNELDATA pstChannelData, S32* piSrcAddr, U32 dwDestAddr, char** pszBuf, U32* pdwMsgLen)
 {
     U8 i;
-    static U8 bChannelPos = 0;
+    //static U8 bChannelPos = 0;
     int iRet = 0;
 
     if (NULL == pstChannelData || NULL == piSrcAddr || NULL == pdwMsgLen) return ERROR_INPUT_PARAM_NULL;
@@ -262,9 +262,9 @@ int msgq_recv(LPMSGQUEUECHANNELDATA pstChannelData, S32* piSrcAddr, U32 dwDestAd
     }
 
     /* 不指定源地址，轮询找到目的地址 */
-    if (bChannelPos >= pstChannelData->bNum) bChannelPos = 0;
+    //if (bChannelPos >= pstChannelData->bNum) bChannelPos = 0;
 
-    for (i = bChannelPos; i < pstChannelData->bNum; i++)
+    for (i = 0; i < pstChannelData->bNum; i++)
     {
         /* 如果目的地址相同 */
         if (pstChannelData->astChannelInfo[i].dwDestAddress == dwDestAddr)
@@ -286,7 +286,7 @@ int msgq_recv(LPMSGQUEUECHANNELDATA pstChannelData, S32* piSrcAddr, U32 dwDestAd
             /* 发生错误，是否也进行下次轮询？纠结 */
             return iRet;
         }
-        bChannelPos++;
+        /*bChannelPos++;*/
     }
 
     /* 以上轮询时，因为有continue语句，可能会导致iRet=0， *pdwBufSize=0，这是正确的 */

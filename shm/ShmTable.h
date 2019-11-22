@@ -64,8 +64,8 @@ struct tagShmTable
     U32 dwDataSize;                     /* 每个数据大小 */
     U32 dwMaxDataNum;                   /* 数据最大数量 */
     LPSHMTABLEDATA pstTableData;        /* 数据区，共享内存地址 */
-    FIXMEMPOLL stIndexMemPool;          /* 数据索引内存分配区 */
-    FIXMEMPOLL stDataMemPool;           /* 数据内存分配区 */
+    FIXMEMPOOL stIndexMemPool;          /* 数据索引内存分配区 */
+    FIXMEMPOOL stDataMemPool;           /* 数据内存分配区 */
     SHMTABLEINTERATOR stInterator;      /* 迭代器 */
     LPFUNCSHMTABLEEQUAL equal;          /* 数据相对函数 */
     LPFUNCSHMTABLEHASH hash;            /* 数据hash算法函数 */

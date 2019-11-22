@@ -1,11 +1,33 @@
 /*
  * @(#) BaseFuncDef.h Created on 2014-03-27
  *
- * Copyright (c) 2014-2054 Erisen Xu(徐勇) All Rights Reserved
+ * Copyright (c) 2014-2016 Erisen Xu (@itfriday)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 #ifndef BASE_FUNC_DEF_H
 #define BASE_FUNC_DEF_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**
  * 从缓冲区中读取4个字节数据到指定变量中
@@ -109,13 +131,21 @@
 
 #ifndef WIN32
 #define STRNCPY(szDest, nDestSize, szSrc, nMaxCount)  strncpy(szDest, szSrc, nDestSize)
+#define SNPRINTF(szBuf, dwBufSize, szFormat, args...) \
+    snprintf((szBuf), (dwBufSize) - 1, szFormat, ##args); \
+    (szBuf)[(dwBufSize) - 1] = 0
 #else
 #define STRNCPY(szDest, nDestSize, szSrc, nMaxCount)  strncpy_s(szDest, nDestSize, szSrc, nMaxCount)
+#define SNPRINTF(szBuf, dwBufSize, szFormat, ...) \
+    _snprintf((szBuf), (dwBufSize) - 1, szFormat, ##__VA_ARGS__); \
+    (szBuf)[(dwBufSize) - 1] = 0
 #endif
+
+#define MSTRNCPY(szDest, szSrc) STRNCPY(szDest, sizeof(szDest), szSrc, sizeof(szDest))
 
 #define UNUSED(val)
 
 #define CLOSE_SOCKET(s) \
-    if (s != INADDR_NONE) close(s)
+    if (s != (int)INADDR_NONE) close(s)
 
 #endif

@@ -45,7 +45,7 @@ int msg_queue_init_channel(const char* szName, int* piQueueID, int* piShmID)
     /* 创建文件 */
     if (NULL == szName)
     {
-        snprintf(szFileName, sizeof(szFileName), "%s/.msgq.%d", pszCurPath, time(NULL));
+        snprintf(szFileName, sizeof(szFileName), "%s/.msgq.%d", pszCurPath, (int)time(NULL));
     }
     else
     {

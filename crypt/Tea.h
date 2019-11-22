@@ -1,0 +1,67 @@
+/**
+ * @(#) Tea.h Tea加密解密算法实现
+ *
+ * Copyright (c) 2014-2016 Erisen Xu (@itfriday)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @author Erisen Xu
+ * @version 1.0
+ * @history 2017-04-13 ErisenXu 创建文件
+ */
+
+#ifndef TEA_H
+#define TEA_H
+
+#include "comm/BaseDef.h"
+#include "comm/BaseFuncDef.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/**
+ * TEA加密
+ * @param szValue 待加密明文
+ * @param len 明文长度
+ * @param szCrypt 加密后密文
+ * @param plenCrypt 加密后密文长度
+ * @param key 加密key
+ * @param mixkey 加密随机值
+ */
+void tea_encrypt(const char* szValue, size_t len, char* szCrypt, size_t* plenCrypt, const S32* key, const S32* mixkey);
+
+/**
+ * TEA解密
+ * @param szCrypt 待解密密文
+ * @param len 密文长度
+ * @param szValue 解密后明文
+ * @param plenValue 解密后明文长度
+ * @param key 解密key
+ * @param mixkey 解密随机值
+ */
+void tea_decrypt(const char* szCrypt, size_t len, char* szValue, size_t* plenValue, const S32* key, const S32* mixkey);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+

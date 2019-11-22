@@ -15,6 +15,13 @@ extern "C"
 #endif
 
 /**
+ * 将网络地址转换为int形式
+ * @param szAddr 网络地址
+ * @return 返回网络地址对应的int形式
+ */
+unsigned long inet_address(const char* szAddr);
+
+/**
  * 将套接字设置为非阻塞式
  * @param fd 套接字
  * @return 成功返回0，失败返回错误码
@@ -30,6 +37,15 @@ int socket_set_non_blocking(int fd);
  * @return 成功返回0，失败返回错误码
  */
 int socket_create_tcp_server(int* pifd, const char* szIpAddr, U16 nPort, U8 bNonBlock);
+
+/**
+ * 连接到服务器
+ * @param pifd 连接成功，返回套接字
+ * @param szHost 要连接的服务器
+ * @param nPort 服务器监听端口
+ * @return 成功返回0，失败返回错误码
+ */
+int socket_connect_to_tcp_server(int* pifd, const char* szHost, U16 nPort);
 
 /**
  * 将ip转换为ip地址

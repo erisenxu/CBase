@@ -1,5 +1,25 @@
 /**
- * @(#) ByteArray.cpp 字节数组对象，一般用于消息编码解码
+ * @(#) ByteArray.c 字节数组对象，一般用于消息编码解码
+ *
+ * Copyright (c) 2014-2016 Erisen Xu (@itfriday)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *
  * @author Erisen Xu
  * @version 1.0
@@ -21,6 +41,12 @@
         if (NULL == pstByteArray || NULL == pstByteArray->pszData) return ERROR_INPUT_PARAM_NULL; \
         if (pstByteArray->dwLen + sizeof(nVal) > pstByteArray->dwSize) return ERROR_APPEND_BUFSIZE_SHORT; \
     } while(0)
+
+/**
+ * 将十六进制字符转换成整数
+ * @param chHex 被转换的十六进制字符
+ */
+static U8 hex_char_to_int(char chHex);
 
 /**
  * 将字符添加到数组
@@ -202,6 +228,16 @@ const char* byte_array_to_string(LPBYTEARRAY pstByteArray)
 }
 
 /**
+ * 去掉末尾的给定字符
+ */
+void bytearray_trim_tail(LPBYTEARRAY pstByteArray, char chTrim)
+{
+    if (NULL == pstByteArray || NULL == pstByteArray->pszData || pstByteArray->dwLen <= 0) return;
+
+    if (pstByteArray->pszData[pstByteArray->dwLen - 1] == chTrim) pstByteArray->dwLen--;
+}
+
+/**
  * 将字节数组转换成供打印的十六进制字符串
  * 
  * @param pstBuf 用来保存数据的数组
@@ -309,68 +345,75 @@ void bytes_to_printable(LPBYTEARRAY pstBuf, const char* szBytes,
     bytearray_append_u8(pstBuf, (U8)0);
 }
 
-#if 0
 /**
  * 将字节数组转成字符串，不可见字符以.表示
- * @param baBuf 用来保存数据的数组
+ * @param pstBuf 用来保存数据的数组
  * @param szBytes 要打印的字节数组
  * @param nBufLen 字节数组szBytes的总长度
  * @param nOffset 要打印的数组的起始字节索引
  * @param nLength 要打印的数组中字节的总长度，若nLength=-1，则转换所有字节
+ * @param bAppendZero 是否在字符串末尾添加0
  */
-void MByteArray::bytesToStr(MByteArray& baBuf, const char* szBytes,
-                            int nBufLen, int nOffset, int nLength)
+int bytes_to_string(LPBYTEARRAY pstBuf, const char* szBytes, int nBufLen, int nOffset, int nLength, U8 bAppendZero)
 {
+    int i;
+    int iRet;
     int nEnd = nLength < 0 ? nOffset + nBufLen : nOffset + nLength;
 
-	if (nEnd > nBufLen) nEnd = nBufLen;
+    if (nEnd > nBufLen) nEnd = nBufLen;
 
-    for (int i = nOffset; i < nEnd; i++)
+    for (i = nOffset; i < nEnd; i++)
     {
-		if (szBytes[i] >= 32 && szBytes[i] < 127)
+        if (szBytes[i] >= 32 && szBytes[i] < 127)
         {
-            baBuf.append((U8)szBytes[i]);
-		}
+            CHECK_FUNC_RET(bytearray_append_u8(pstBuf, (U8)szBytes[i]), iRet);
+        }
         else
         {
-            baBuf.append((U8)'.');
-		}
+            CHECK_FUNC_RET(bytearray_append_u8(pstBuf, (U8)'.'), iRet);
+        }
     }
     // 最后将字节数组变成字符串
-    baBuf.append((U8)0);
+    return bAppendZero ? bytearray_append_u8(pstBuf, (U8)0) : 0;
 }
 
 /**
  * 将字节数组转换成十六进制字符串
- * @param baBuf 用来保存转换后的数据的数组
+ * @param pstBuf 用来保存转换后的数据的数组
  * @param szBytes 被转换的字节数组
  * @param nBufLen 字节数组长度
  * @param nOffset 数组的起始字节索引
+ * @param bAppendZero 是否在字符串末尾添加0
  */
-void MByteArray::bytesToHexStr(MByteArray& baBuf, const char* szBytes, int nBufLen, int nOffset)
+int bytes_to_hex_string(LPBYTEARRAY pstBuf, const char* szBytes, int nBufLen, int nOffset, U8 bAppendZero)
 {
-    if (!szBytes || nBufLen <= 0) return;
+    int iRet = 0;
+    int i;
+
+    if (!szBytes || nBufLen <= 0) return iRet;
 
     const char* szHexDigits = "0123456789abcdef";
 
-    for (int i = nOffset; i < nBufLen; i++)
+    for (i = nOffset; i < nBufLen; i++)
     {
-        baBuf.append((U8)szHexDigits[(szBytes[i] >> 4) & 0xF]);
-        baBuf.append((U8)szHexDigits[szBytes[i] & 0xF]);
+        CHECK_FUNC_RET(bytearray_append_u8(pstBuf, (U8)szHexDigits[(szBytes[i] >> 4) & 0xF]), iRet);
+        CHECK_FUNC_RET(bytearray_append_u8(pstBuf, (U8)szHexDigits[szBytes[i] & 0xF]), iRet);
     }
 
     // 最后将字节数组变成字符串
-    baBuf.append((U8)0);
+    return bAppendZero ? bytearray_append_u8(pstBuf, (U8)0) : 0;
 }
 
 /**
  * 将十六进制字符串转换成字节数组
- * @param baBuf 用来保存转换后的数据的数组
+ * @param pstBuf 用来保存转换后的数据的数组
  * @param szHexStr 被转换的十六进制字符串数据
  */
-void MByteArray::hexStrToBytes(MByteArray& baBuf, const char* szHexStr)
+int hex_string_to_bytes(LPBYTEARRAY pstBuf, const char* szHexStr)
 {
-    if (!szHexStr || !(*szHexStr)) return;
+    int iRet = 0;
+
+    if (!szHexStr || !(*szHexStr)) return iRet;
 
     size_t nLen = strlen(szHexStr);
     char chHi; // 高位
@@ -379,22 +422,24 @@ void MByteArray::hexStrToBytes(MByteArray& baBuf, const char* szHexStr)
 
     if (nLen % 2 != 0)
     {
-        baBuf.append((U8)hexCharToInt(*szBuf++));
+        CHECK_FUNC_RET(bytearray_append_u8(pstBuf, (U8)hex_char_to_int(*szBuf++)), iRet);
     }
 
     while (*szBuf)
     {
         chHi = *szBuf++;
         chLo = *szBuf++;
-        baBuf.append((U8)((hexCharToInt(chHi) << 4) | hexCharToInt(chLo)));
+        CHECK_FUNC_RET(bytearray_append_u8(pstBuf, (U8)((hex_char_to_int(chHi) << 4) | hex_char_to_int(chLo))), iRet);
     }
+
+    return 0;
 }
 
 /**
  * 将十六进制字符转换成整数
  * @param chHex 被转换的十六进制字符
  */
-U8 MByteArray::hexCharToInt(char chHex)
+U8 hex_char_to_int(char chHex)
 {
     switch (chHex)
     {
@@ -427,4 +472,3 @@ U8 MByteArray::hexCharToInt(char chHex)
         return 0;
     }
 }
-#endif

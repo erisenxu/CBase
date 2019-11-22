@@ -23,6 +23,24 @@
 #include <string.h> /* 使用strerror必须加上这个头文件，否则会导致崩溃，:( */
 
 /**
+ * 将网络地址转换为int形式
+ * @param szAddr 网络地址
+ * @return 返回网络地址对应的int形式
+ */
+unsigned long inet_address(const char* szAddr)
+{
+    unsigned long nInetAddr = inet_addr(szAddr);
+    if (INADDR_NONE == nInetAddr)
+    {
+        struct hostent* pHostEnt = gethostbyname(szAddr);
+        if (!pHostEnt) return INADDR_NONE;
+        nInetAddr = *(unsigned long*)(pHostEnt->h_addr_list[0]);
+    }
+
+    return nInetAddr;
+}
+
+/**
  * 将套接字设置为非阻塞式
  * @param fd 套接字
  * @return 成功返回0，失败返回错误码
@@ -127,6 +145,58 @@ int socket_create_tcp_server(int* pifd, const char* szIpAddr, U16 nPort, U8 bNon
     }
 
     return iRet;
+}
+
+/**
+ * 连接到服务器
+ * @param pifd 连接成功，返回套接字
+ * @param szHost 要连接的服务器
+ * @param nPort 服务器监听端口
+ * @return 成功返回0，失败返回错误码
+ */
+int socket_connect_to_tcp_server(int* pifd, const char* szHost, U16 nPort)
+{
+    struct sockaddr_in stDestAddr;
+    unsigned long nInetAddr;
+
+    LOG_DEBUG("%s enter.", __FUNCTION__);
+
+    if (NULL == pifd || NULL == szHost) return ERROR_INPUT_PARAM_NULL;
+
+    /* 转换网络地址 */
+    nInetAddr = inet_address(szHost);
+    if (INADDR_NONE == nInetAddr)
+    {
+        LOG_ERROR("%s:Error to create socket for host (%s): the address is invalid",
+                  __FUNCTION__, szHost);
+        return ERROR_SOCKET_ADDR;
+    }
+
+    /* 创建套接字 */
+    *pifd = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (*pifd < 0)
+    {
+        LOG_ERROR("%s:Error to create socket for host (%s) error info:%s",
+                  __FUNCTION__, szHost, strerror(errno));
+        return ERROR_SOCKET_INVOKE;
+    }
+
+    /* 建立连接 */
+    memset(&stDestAddr, 0, sizeof(stDestAddr));
+    stDestAddr.sin_family = AF_INET;
+    stDestAddr.sin_port = htons(nPort);
+    stDestAddr.sin_addr.s_addr = nInetAddr;
+
+    if (connect(*pifd, (struct sockaddr *)&stDestAddr, sizeof(struct sockaddr)) < 0)
+    {
+        LOG_ERROR("%s:Error to connect to host (%s : %d), error info:%s",
+                  __FUNCTION__, szHost, nPort, strerror(errno));
+        close(*pifd);
+        return ERROR_SOCKET_CONNECT;
+    }
+
+    return 0;
 }
 
 /**

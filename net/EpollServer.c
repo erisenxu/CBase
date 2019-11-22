@@ -16,6 +16,24 @@
 #include <arpa/inet.h>
 #include <string.h> /* 使用strerror必须加上这个头文件，否则会导致崩溃，:( */
 #include <errno.h>
+#include <unistd.h>
+#include <time.h>
+
+/**
+ * 生成epoll客户端ID
+ * @return 返回生成的ID
+ */
+static U64 gen_epoll_client_id()
+{
+    U64 ullID;
+    U64 ullTime = time(NULL) & 0xFFFFFFFF;
+    static U32 dwSequence = 0;
+
+    ullID = ullTime << 32;
+    ullID |= ((U64)dwSequence++ & 0xFFFFFFFF);
+
+    return ullID;
+}
 
 /**
  * 新增epoll事件
@@ -58,10 +76,17 @@ static void free_epoll_client(LPEPOLLSERVER pstEpollServer, LPEPOLLCLIENT pstEpo
 
     if (NULL == pstEpollServer || NULL == pstEpollClient) return;
 
+    if (pstEpollServer->pstFuncOnClientClose) pstEpollServer->pstFuncOnClientClose(pstEpollClient);
+
     close(pstEpollClient->iSocketFD);
     pstEpollClient->iSocketFD = -1;
+
+#ifdef EPOLL_USE_FIX_MEM_POOL
     fix_mem_pool_free(&pstEpollServer->stMsgDataMemPool, pstEpollClient->dwMsgDataMemIdx);
-    fix_mem_pool_free(&pstEpollServer->stClientMemPool, pstEpollClient->dwClientMemIdx);
+#else
+    mem_pool_free(&pstEpollServer->stMsgDataMemPool, pstEpollClient->pszRecvMsgData);
+#endif
+    fix_mem_pool_free(&pstEpollServer->stClientMemPool, (int)pstEpollClient->dwClientMemIdx);
 }
 
 /**
@@ -122,10 +147,16 @@ static int epoll_server_accept_process(LPEPOLLSERVER pstEpollServer)
                 continue;
             }
 
-            pstEpollClient->dwClientMemIdx = iMemIndex;
+            pstEpollClient->dwClientMemIdx = (U32)iMemIndex;
+            pstEpollClient->bState = 0;
+            pstEpollClient->ullClientID = gen_epoll_client_id();
 
             /* 为接收消息的缓存数组分配内存 */
+#ifdef EPOLL_USE_FIX_MEM_POOL
             pstEpollClient->pszRecvMsgData = fix_mem_pool_malloc(&pstEpollServer->stMsgDataMemPool, &iMemIndex);
+#else
+            pstEpollClient->pszRecvMsgData = mem_pool_malloc(&pstEpollServer->stMsgDataMemPool);
+#endif
             if (NULL == pstEpollClient->pszRecvMsgData)
             {
                 close(iClientFD);
@@ -140,7 +171,9 @@ static int epoll_server_accept_process(LPEPOLLSERVER pstEpollServer)
             pstEpollClient->iSocketFD = iClientFD;
             pstEpollClient->dwRecvLen = 0;
             //pstEpollClient->dwMsgLen = 0;
+#ifdef EPOLL_USE_FIX_MEM_POOL
             pstEpollClient->dwMsgDataMemIdx = iMemIndex;
+#endif
 
             /* 添加epoll监听事件 */
             iRet = epoll_sever_add_event(pstEpollServer, iClientFD, pstEpollClient);
@@ -189,6 +222,8 @@ static int epoll_server_recv_process(LPEPOLLSERVER pstEpollServer, LPEPOLLCLIENT
             iReadLen = read(pstEpollClient->iSocketFD, pstEpollClient->pszRecvMsgData + pstEpollClient->dwRecvLen,
                 pstEpollServer->dwMaxMsgLen - pstEpollClient->dwRecvLen);
         } while (iReadLen < 0 && errno == EINTR);   // 预防读的过程中被其他事件中断
+
+        LOG_DEBUG("%s:%d, read length:%d, errno:%d", __FUNCTION__, __LINE__, iReadLen, errno);
 
         if (iReadLen == 0)
         {
@@ -239,11 +274,18 @@ static int epoll_server_recv_process(LPEPOLLSERVER pstEpollServer, LPEPOLLCLIENT
  * @param szMsgDataMem 接收消息的共享内存地址
  * @param dwMsgDataMemLen 接收消息的共享内存大小
  * @param pstFuncHandleMsg 接收消息处理函数
+ * @param pstFuncOnClientClose 处理客户端连接关闭事件
  * @return 成功返回0，失败返回错误码
  */
+#ifdef EPOLL_USE_FIX_MEM_POOL
 int init_epoll_server(LPEPOLLSERVER pstEpollServer, const char* szIpAddr, U16 nPort, U32 dwMaxMsgLen,
                       char* szClientMem, U32 dwClientMemLen, char* szMsgDataMem, U32 dwMsgDataMemLen,
-                      LPFUNCHANDLEPOLLMSG pstFuncHandleMsg)
+                      LPFUNCHANDLEPOLLMSG pstFuncHandleMsg, LPFUNCONEPOLLCLIENTCLOSE pstFuncOnClientClose)
+#else
+int init_epoll_server(LPEPOLLSERVER pstEpollServer, const char* szIpAddr, U16 nPort, U32 dwMaxMsgLen,
+                      char* szClientMem, U32 dwClientMemLen,
+                      LPFUNCHANDLEPOLLMSG pstFuncHandleMsg, LPFUNCONEPOLLCLIENTCLOSE pstFuncOnClientClose)
+#endif
 {
     int iRet;
 
@@ -255,9 +297,11 @@ int init_epoll_server(LPEPOLLSERVER pstEpollServer, const char* szIpAddr, U16 nP
     pstEpollServer->dwMaxMsgLen = dwMaxMsgLen;
     /* 消息处理函数 */
     pstEpollServer->pstFuncHandleMsg = pstFuncHandleMsg;
+    pstEpollServer->pstFuncOnClientClose = pstFuncOnClientClose;
 
     /* 为客户数据分配共享内存 */
     iRet = init_fix_mem_pool(&pstEpollServer->stClientMemPool, szClientMem, dwClientMemLen, sizeof(EPOLLCLIENT));
+
     if (iRet != 0)
     {
         LOG_ERROR("%s:%d, init mem pool for epoll client fail:%d", __FUNCTION__, __LINE__, iRet);
@@ -265,7 +309,11 @@ int init_epoll_server(LPEPOLLSERVER pstEpollServer, const char* szIpAddr, U16 nP
     }
 
     /* 为接收消息分配共享内存 */
+#ifdef EPOLL_USE_FIX_MEM_POOL
     iRet = init_fix_mem_pool(&pstEpollServer->stMsgDataMemPool, szMsgDataMem, dwMsgDataMemLen, dwMaxMsgLen);
+#else
+    iRet = init_mem_pool(&pstEpollServer->stMsgDataMemPool, dwMaxMsgLen);
+#endif
     if (iRet != 0)
     {
         LOG_ERROR("%s:%d, init mem pool for ext data fail:%d", __FUNCTION__, __LINE__, iRet);
@@ -370,7 +418,7 @@ int epoll_server_process(LPEPOLLSERVER pstEpollServer, int iWaitTime)
  * @param dwMsgLen 要发送的消息长度
  * @return 成功写的消息长度，且长度与发送的消息长度相等，失败返回0或负数，错误值在errno中
  */
-static int epoll_socket_write(int iSockFD, const char* pszMsg, U32 dwMsgLen)
+int epoll_socket_write(int iSockFD, const char* pszMsg, U32 dwMsgLen)
 {
     U32 dwSentLen = 0;
     int dwWriteLen;
@@ -410,7 +458,7 @@ static int epoll_socket_write(int iSockFD, const char* pszMsg, U32 dwMsgLen)
  * @param dwMsgLen 要发送的消息长度
  * @return 成功返回0，失败返回错误码
  */
-int epoll_write_process(LPEPOLLSERVER pstEpollServer, int iClientIndex, int iClientFD, U32 dwClientIP,
+int epoll_write_process(LPEPOLLSERVER pstEpollServer, int iClientIndex, U64 ullCilentID, int iClientFD, U32 dwClientIP,
                         U16 nClientPort, const char* pszMsg, U32 dwMsgLen)
 {
     int iFree;
@@ -442,7 +490,10 @@ int epoll_write_process(LPEPOLLSERVER pstEpollServer, int iClientIndex, int iCli
     }
 
     /* 检查Epoll client数据是否正常 */
-    if (iClientFD != pstEpollClient->iSocketFD || dwClientIP != pstEpollClient->dwIP || nClientPort != pstEpollClient->nPort)
+    if (ullCilentID != pstEpollClient->ullClientID ||
+        iClientFD != pstEpollClient->iSocketFD ||
+        dwClientIP != pstEpollClient->dwIP ||
+        nClientPort != pstEpollClient->nPort)
     {
         return ERROR_EPOLL_CLIENT_UNMATCH;
     }

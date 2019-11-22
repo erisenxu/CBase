@@ -4,65 +4,68 @@
 
 include Makefile.rules
 
-LIB_OBJS = $(OBJ_DIR)/ByteArray.o \
-		   $(OBJ_DIR)/FileLib.o \
-		   $(OBJ_DIR)/Logger.o \
-		   $(OBJ_DIR)/FixMemPool.o \
-		   $(OBJ_DIR)/FMsgChannel.o \
-		   $(OBJ_DIR)/FMsgQ.o \
-		   $(OBJ_DIR)/EpollServer.o \
-		   $(OBJ_DIR)/net.o \
-		   $(OBJ_DIR)/ShmMgr.o \
-		   $(OBJ_DIR)/ShmTable.o
+LIB_SRC = $(wildcard ${SRC_DIR}/comm/*.c) \
+		  $(wildcard ${SRC_DIR}/crypt/*.c) \
+		  $(wildcard ${SRC_DIR}/http/*.c) \
+		  $(wildcard ${SRC_DIR}/json/*.c) \
+		  $(wildcard ${SRC_DIR}/list/*.c) \
+		  $(wildcard ${SRC_DIR}/log/*.c) \
+		  $(wildcard ${SRC_DIR}/mem/*.c) \
+		  $(wildcard ${SRC_DIR}/msgq/*.c) \
+		  $(wildcard ${SRC_DIR}/net/*.c) \
+		  $(wildcard ${SRC_DIR}/shm/*.c)
 
-TARGET_OBJS = $(LIB_OBJS) \
-			  $(OBJ_DIR)/main.o \
-			  $(OBJ_DIR)/ShmTableTest.o
+LIB_OBJS = $(patsubst %.c,%.o,${LIB_SRC})
+
+TARGET_SRC = $(wildcard ${SRC_DIR}/*.c) \
+			 $(wildcard ${SRC_DIR}/test/*.c)
+
+TARGET_OBJS = $(patsubst %.c,%.o,${TARGET_SRC})
 
 $(LIB_TARGET): $(LIB_OBJS)
 	$(LIB) $@ $^
 
-$(TARGET): $(TARGET_OBJS)
-	$(LINK) -o $@ $^
+$(TARGET): $(LIB_OBJS) $(TARGET_OBJS)
+	$(LINK) -o $@ $^ $(CXXLIBS)
 
-$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/comm/%.o:${SRC_DIR}/comm/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/ByteArray.o: $(SRC_DIR)/comm/ByteArray.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/crypt/%.o:${SRC_DIR}/crypt/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/FileLib.o: $(SRC_DIR)/comm/FileLib.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/http/%.o:${SRC_DIR}/http/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/Logger.o: $(SRC_DIR)/log/Logger.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/json/%.o:${SRC_DIR}/json/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/FixMemPool.o: $(SRC_DIR)/mem/FixMemPool.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/list/%.o:${SRC_DIR}/list/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/FMsgChannel.o: $(SRC_DIR)/msgq/FMsgChannel.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/log/%.o:${SRC_DIR}/log/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/FMsgQ.o: $(SRC_DIR)/msgq/FMsgQ.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/mem/%.o:${SRC_DIR}/mem/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/EpollServer.o: $(SRC_DIR)/net/EpollServer.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/msgq/%.o:${SRC_DIR}/msgq/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/net.o: $(SRC_DIR)/net/net.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/net/%.o:${SRC_DIR}/net/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/ShmMgr.o: $(SRC_DIR)/shm/ShmMgr.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/shm/%.o:${SRC_DIR}/shm/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/ShmTable.o: $(SRC_DIR)/shm/ShmTable.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+${SRC_DIR}/%.o:${SRC_DIR}/%.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
-$(OBJ_DIR)/ShmTableTest.o: $(SRC_DIR)/test/ShmTableTest.c
-	$(CPP) $^ -o $@ $(CXXFLAGS)
+$(OBJ_DIR)/test/*.o: $(SRC_DIR)/test/*.c
+	$(CPP) $(CXXFLAGS) -c  $< -o $@
 
 clean:
-	rm -f $(TARGET_OBJS) $(TARGET) $(LIB_TARGET)
+	rm -f $(LIB_OBJS) $(TARGET_OBJS) $(TARGET) $(LIB_TARGET)
 
 install:
 	cp $(LIB_TARGET) $(INSTALL_DIR)/lib

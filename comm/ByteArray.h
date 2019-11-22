@@ -1,6 +1,26 @@
 /**
  * @(#) ByteArray.h 字节数组对象，一般用于消息编码解码
  *
+ * Copyright (c) 2014-2016 Erisen Xu (@itfriday)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
  * @author Erisen Xu
  * @version 1.0
  * @history 2010-12-19 ErisenXu 创建文件
@@ -115,6 +135,11 @@ void bytearray_clear(LPBYTEARRAY pstByteArray);
 const char* byte_array_to_string(LPBYTEARRAY pstByteArray);
 
 /**
+ * 去掉末尾的给定字符
+ */
+void bytearray_trim_tail(LPBYTEARRAY pstByteArray, char chTrim);
+
+/**
  * 将字节数组转换成供打印的十六进制字符串
  *
  * @param pstBuf 用来保存数据的数组
@@ -126,6 +151,36 @@ const char* byte_array_to_string(LPBYTEARRAY pstByteArray);
  */
 void bytes_to_printable(LPBYTEARRAY pstBuf, const char* szBytes,
                         int nBufLen, int nOffset, int nLength, int nColumn);
+
+/**
+ * 将字节数组转成字符串，不可见字符以.表示
+ * @param pstBuf 用来保存数据的数组
+ * @param szBytes 要打印的字节数组
+ * @param nBufLen 字节数组szBytes的总长度
+ * @param nOffset 要打印的数组的起始字节索引
+ * @param nLength 要打印的数组中字节的总长度，若nLength=-1，则转换所有字节
+ * @param bAppendZero 是否在字符串末尾添加0
+ */
+int bytes_to_string(LPBYTEARRAY pstBuf, const char* szBytes, int nBufLen,
+                    int nOffset, int nLength, U8 bAppendZero);
+
+/**
+ * 将字节数组转换成十六进制字符串
+ * @param pstBuf 用来保存转换后的数据的数组
+ * @param szBytes 被转换的字节数组
+ * @param nBufLen 字节数组长度
+ * @param nOffset 数组的起始字节索引
+ * @param bAppendZero 是否在字符串末尾添加0
+ */
+int bytes_to_hex_string(LPBYTEARRAY pstBuf, const char* szBytes, int nBufLen,
+                        int nOffset, U8 bAppendZero);
+
+/**
+ * 将十六进制字符串转换成字节数组
+ * @param pstBuf 用来保存转换后的数据的数组
+ * @param szHexStr 被转换的十六进制字符串数据
+ */
+int hex_string_to_bytes(LPBYTEARRAY pstBuf, const char* szHexStr);
 
 #ifdef __cplusplus
 }

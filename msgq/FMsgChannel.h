@@ -11,6 +11,18 @@
 #define MAX_MSG_CHANNEL_NUM 64  /* 最大通道数量 */
 
 /**
+ * 消息通道地址
+ */
+struct tagMsgQueueAddress
+{
+    U32 dwSrcAddress;           /* 通道源地址 */
+    U32 dwDestAddress;          /* 通道目的地址 */
+};
+
+typedef struct tagMsgQueueAddress   MSGQUEUEADDRESS;
+typedef struct tagMsgQueueAddress*  LPMSGQUEUEADDRESS;
+
+/**
  * 消息队列信息
  */
 struct tagMsgQueueInfo

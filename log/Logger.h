@@ -41,15 +41,15 @@ struct tagLogger
 typedef struct tagLogger    LOGGER;
 typedef struct tagLogger*   LPLOGGER;
 
-#define LOG_DEBUG(szFormat, args...)            log_info(LOG_LV_DEBUG, szFormat, ##args);
-#define LOG_LV_PROTOCOL(szFormat, args...)      log_info(LOG_LV_PROTOCOL, szFormat, ##args);
-#define LOG_INFO(szFormat, args...)             log_info(LOG_LV_INFO, szFormat, ##args);
-#define LOG_WARN(szFormat, args...)             log_info(LOG_LV_WARN, szFormat, ##args);
-#define LOG_ERROR(szFormat, args...)            log_info(LOG_LV_ERROR, szFormat, ##args);
-#define LOG_FATAL(szFormat, args...)            log_info(LOG_LV_FATAL, szFormat, ##args);
-#define LOG_RESULT(szFormat, args...)           log_info(LOG_LV_RESULT, szFormat, ##args);
-#define LOG_PRINT(szFormat, args...)            log_info(LOG_LV_PRINT, szFormat, ##args);
-#define LOG_PRINTLN(szFormat, args...)          log_info(LOG_LV_PRINT_LN, szFormat, ##args);
+#define LOG_DEBUG(szFormat, args...)            log_info(LOG_LV_DEBUG, szFormat, ##args)
+#define LOG_LV_PROTOCOL(szFormat, args...)      log_info(LOG_LV_PROTOCOL, szFormat, ##args)
+#define LOG_INFO(szFormat, args...)             log_info(LOG_LV_INFO, szFormat, ##args)
+#define LOG_WARN(szFormat, args...)             log_info(LOG_LV_WARN, szFormat, ##args)
+#define LOG_ERROR(szFormat, args...)            log_info(LOG_LV_ERROR, szFormat, ##args)
+#define LOG_FATAL(szFormat, args...)            log_info(LOG_LV_FATAL, szFormat, ##args)
+#define LOG_RESULT(szFormat, args...)           log_info(LOG_LV_RESULT, szFormat, ##args)
+#define LOG_PRINT(szFormat, args...)            log_info(LOG_LV_PRINT, szFormat, ##args)
+#define LOG_PRINTLN(szFormat, args...)          log_info(LOG_LV_PRINT_LN, szFormat, ##args)
 
 #ifdef __cplusplus
 extern "C"
